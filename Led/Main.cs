@@ -56,14 +56,16 @@ namespace DbsPlugin.Standard.Led
             #region 編集ウィンドウのコマンド群の定義
             editingUserControl.VM.PartSelectionChanged = new DelegateCommand(() =>
             {
-                changeDef = false;
                 if (editingUserControl.VM.PartCur != -1)
                 {
                     List<LedPart> parts = ledControls.Find(c => c.ControlName == PluginConnector.EditingControl.ControlName).LedParts;
                     UpdateGroupEditing(parts);
                     LedPart part = parts.Find(p => p.Name == editingUserControl.VM.PartCollection[editingUserControl.VM.PartCur]);
                     if (part != null && part.DisplayingYIndex != -1)
+                    {
+                        MessageBox.Show("" + part.DisplayingImage + ", " + part.DisplayingYIndex);
                         editingUserControl.VM.DefCur = editingUserControl.VM.DefCollection.IndexOf(part.BasedBytes[part.DisplayingImage].DefinitionNames[part.DisplayingYIndex].Name);
+                    }
                     else
                         editingUserControl.VM.DefCur = 0;
                 }
@@ -85,6 +87,11 @@ namespace DbsPlugin.Standard.Led
                     LedPart part = ledControls.Find(c => c.ControlName == PluginConnector.EditingControl.ControlName).LedParts.First(p => p.Name == editingUserControl.VM.PartCollection[editingUserControl.VM.PartCur]);
                     part.DisplayingImage = editingUserControl.VM.Groups.FindIndex(g => g.Name == editingUserControl.VM.GroupCollection[editingUserControl.VM.GroupCur]);
                     part.DisplayingYIndex = editingUserControl.VM.Defs.FindIndex(d => d.Name == editingUserControl.VM.DefCollection[editingUserControl.VM.DefCur]);
+                    //MessageBox.Show(part.Name + ": " + part.DisplayingImage + ", " + part.DisplayingYIndex);
+                }
+                else
+                {
+                    //MessageBox.Show("f");
                 }
             });
 
@@ -180,7 +187,10 @@ namespace DbsPlugin.Standard.Led
                 int searchStringLength = searchString.Length;
                 string oldDef = "";
                 if (editingUserControl.VM.DefCur >= 0 && editingUserControl.VM.DefCollection.Count != 0) oldDef = editingUserControl.VM.DefCollection[editingUserControl.VM.DefCur];
+                bool actualChangeDef = changeDef;
+                changeDef = false;
                 editingUserControl.VM.DefCollection.Clear();
+                changeDef = actualChangeDef;
                 if (editingUserControl.VM.Def == "" || editingUserControl.VM.Def == "n;") editingUserControl.VM.DefCollection.Add("(非表示)");
                 if (editingUserControl.VM.Def != "n;")
                 {
@@ -846,6 +856,7 @@ namespace DbsPlugin.Standard.Led
 
         private void UpdateDefEditing(LedPart currentPart, List<LedPartBasedBytesInfo> currentGroups)
         {
+            changeDef = false;
             if (editingUserControl.VM.GroupCollection[0] == "(該当無し)")
             {
                 editingUserControl.VM.DefCollection.Clear();
@@ -864,7 +875,7 @@ namespace DbsPlugin.Standard.Led
                 }
                 else if (editingUserControl.VM.Groups.FindIndex(g => g.Name == currentGroups[currentPart.DisplayingImage].Name) != currentPart.DisplayingImage)
                 {
-                    editingUserControl.VM.DefCur = 1;
+                    editingUserControl.VM.DefCur = 0;
                 }
                 else
                 {
