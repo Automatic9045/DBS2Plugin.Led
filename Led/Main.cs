@@ -63,7 +63,7 @@ namespace DbsPlugin.Standard.Led
                     LedPart part = parts.Find(p => p.Name == editingUserControl.VM.PartCollection[editingUserControl.VM.PartCur]);
                     if (part != null && part.DisplayingYIndex != -1)
                     {
-                        MessageBox.Show("" + part.DisplayingImage + ", " + part.DisplayingYIndex);
+                        //MessageBox.Show("" + part.DisplayingImage + ", " + part.DisplayingYIndex);
                         editingUserControl.VM.DefCur = editingUserControl.VM.DefCollection.IndexOf(part.BasedBytes[part.DisplayingImage].DefinitionNames[part.DisplayingYIndex].Name);
                     }
                     else
@@ -88,10 +88,6 @@ namespace DbsPlugin.Standard.Led
                     part.DisplayingImage = editingUserControl.VM.Groups.FindIndex(g => g.Name == editingUserControl.VM.GroupCollection[editingUserControl.VM.GroupCur]);
                     part.DisplayingYIndex = editingUserControl.VM.Defs.FindIndex(d => d.Name == editingUserControl.VM.DefCollection[editingUserControl.VM.DefCur]);
                     //MessageBox.Show(part.Name + ": " + part.DisplayingImage + ", " + part.DisplayingYIndex);
-                }
-                else
-                {
-                    //MessageBox.Show("f");
                 }
             });
 
