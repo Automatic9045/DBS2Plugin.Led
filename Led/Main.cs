@@ -993,16 +993,19 @@ namespace DbsPlugin.Standard.Led
                                     if ((part.Visibility & displaySetting.VisibleIndex) == displaySetting.VisibleIndex)
                                     {
                                         part.DisplayingXIndex = displaySetting.FaceIndex;
+
+                                        if (part.DisplayingYIndex != -1)
+                                        {
+                                            if (isX64)
+                                                CalculationX64.CopyImageToDots(dots, part.BasedBytes[part.DisplayingImage].Bytes, part.X, part.Y, part.BasedBytes[part.DisplayingImage].Width, part.BasedBytes[part.DisplayingImage].Height, part.DrawWidth, part.DrawHeight, dotWidth, dotHeight, part.DisplayingXIndex, part.DisplayingYIndex, true);
+                                            else
+                                                CalculationX86.CopyImageToDots(dots, part.BasedBytes[part.DisplayingImage].Bytes, part.X, part.Y, part.BasedBytes[part.DisplayingImage].Width, part.BasedBytes[part.DisplayingImage].Height, part.DrawWidth, part.DrawHeight, dotWidth, dotHeight, part.DisplayingXIndex, part.DisplayingYIndex, true);
+                                        }
                                     }
                                     else
                                     {
                                         part.DisplayingXIndex = -1;
                                     }
-
-                                    if (isX64)
-                                        CalculationX64.CopyImageToDots(dots, part.BasedBytes[part.DisplayingImage].Bytes, part.X, part.Y, part.BasedBytes[part.DisplayingImage].Width, part.BasedBytes[part.DisplayingImage].Height, part.DrawWidth, part.DrawHeight, dotWidth, dotHeight, part.DisplayingXIndex, part.DisplayingYIndex, true);
-                                    else
-                                        CalculationX86.CopyImageToDots(dots, part.BasedBytes[part.DisplayingImage].Bytes, part.X, part.Y, part.BasedBytes[part.DisplayingImage].Width, part.BasedBytes[part.DisplayingImage].Height, part.DrawWidth, part.DrawHeight, dotWidth, dotHeight, part.DisplayingXIndex, part.DisplayingYIndex, true);
                                 }
                                 #endregion
                                 break;
