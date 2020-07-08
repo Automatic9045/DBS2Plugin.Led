@@ -38,7 +38,8 @@ namespace DbsPlugin.Standard.Led
 
         private List<LedControlInfo> ledControls = new List<LedControlInfo>();
         private Dictionary<string, IVisibilityConverter> visibilityConverters = new Dictionary<string, IVisibilityConverter>();
-        private Dictionary<string, IDisplayPhaseConverter> displaySettingConverters = new Dictionary<string, IDisplayPhaseConverter>();
+        private Dictionary<string, IDisplayPhaseConverter> displayPhaseConverters = new Dictionary<string, IDisplayPhaseConverter>();
+        private Dictionary<string, ISetConverter> setConverters = new Dictionary<string, ISetConverter>();
         private LedEditingUserControl editingUserControl = new LedEditingUserControl();
 
         private static readonly bool isX64 = Environment.Is64BitProcess;
@@ -54,6 +55,11 @@ namespace DbsPlugin.Standard.Led
             dispatcher = PluginConnector.GetDispatcher();
 
             #region 編集ウィンドウのコマンド群の定義
+            editingUserControl.VM.ShortcutSelectionChanged = new DelegateCommand(() =>
+            {
+
+            });
+
             editingUserControl.VM.PartSelectionChanged = new DelegateCommand(() =>
             {
                 if (editingUserControl.VM.PartCur != -1)
@@ -89,6 +95,12 @@ namespace DbsPlugin.Standard.Led
                     part.DisplayingYIndex = editingUserControl.VM.Defs.FindIndex(d => d.Name == editingUserControl.VM.DefCollection[editingUserControl.VM.DefCur]);
                     //MessageBox.Show(part.Name + ": " + part.DisplayingImage + ", " + part.DisplayingYIndex);
                 }
+            });
+
+
+            editingUserControl.VM.ShortcutTextChanged = new DelegateCommand(() =>
+            {
+
             });
 
             editingUserControl.VM.PartTextChanged = new DelegateCommand(() =>
@@ -226,6 +238,30 @@ namespace DbsPlugin.Standard.Led
                     editingUserControl.VM.DefHelp = "(候補 " + editingUserControl.VM.DefCollection.Count + " 件 / " + (editingUserControl.VM.Defs.Count + 1) + " 件)";
                 }
             });
+
+
+            editingUserControl.VM.RunShortcut = new DelegateCommand(() =>
+            {
+                if (editingUserControl.VM.ShortcutCur != -1)
+                {
+                    LedControlInfo control = ledControls.Find(c => c.ControlName == PluginConnector.EditingControl.ControlName);
+                    List<LedShortcutSetDefinition> sets = control.Shortcuts.Find(s => s.Name == editingUserControl.VM.ShortcutCollection[editingUserControl.VM.ShortcutCur]).Sets;
+                    foreach (LedShortcutSetDefinition set in sets)
+                    {
+                        switch (set.Mode)
+                        {
+                            case LedShortcutSetMode.Set:
+                                LedPart part = control.LedParts[set.Set.TargetIndex];
+                                part.DisplayingImage = set.Set.ImageIndex;
+                                part.DisplayingYIndex = set.Set.FrameIndex;
+                                break;
+                            case LedShortcutSetMode.SetConverter:
+                                set.SetConverter.Invoke(control.LedParts, set.SetConverterArgument);
+                                break;
+                        }
+                    }
+                }
+            });
             #endregion
 
             stopwatch.Start();
@@ -246,10 +282,13 @@ namespace DbsPlugin.Standard.Led
                     AddLedDisplay(element, LedDisplayMode.Normal, xmlPath);
                     break;
                 case "FpsLedDisplay":
-                    AddLedDisplay(element, LedDisplayMode.ShowFps, xmlPath);
+                    AddLedDisplay(element, LedDisplayMode.Fps, xmlPath);
                     break;
-                case "MsecLedDisplay":
-                    AddLedDisplay(element, LedDisplayMode.ShowElapsedMilliseconds, xmlPath);
+                case "MillisecLedDisplay":
+                    AddLedDisplay(element, LedDisplayMode.ElapsedMilliseconds, xmlPath);
+                    break;
+                case "DebugLedDisplay":
+                    AddLedDisplay(element, LedDisplayMode.Debug, xmlPath);
                     break;
                 default:
                     PluginConnector.ThrowError("コントロール \"" + element.Name.LocalName + "\" は定義されていません。", this.GetType().Name, "", "");
@@ -308,6 +347,7 @@ namespace DbsPlugin.Standard.Led
                 byte[] pixels = new byte[stride * height];
 
                 List<LedPart> parts = new List<LedPart>();
+                List<LedShortcut> shortcuts = new List<LedShortcut>();
                 string layoutXmlPath = Combine(xmlPath, (string)element.Attribute("Source") ?? "");
                 if (mode != LedDisplayMode.Normal || layoutXmlPath == xmlPath)
                 {
@@ -327,21 +367,20 @@ namespace DbsPlugin.Standard.Led
                     }
                     else
                     {
-                        XElement[] partElements = layout.Elements("Part").ToArray();
-                        int partElementsCount = partElements.Count();
-                        for (int i = 0; i < partElementsCount; i++)
+                        List<XElement> shorucuts = layout.Elements("Part").ToList();
+                        for (int i = 0; i < shorucuts.Count; i++)
                         {
-                            string partName = (string)partElements[i].Attribute("Name");
+                            string partName = (string)shorucuts[i].Attribute("Name");
                             if (partName == null)
                             {
                                 ThrowControlError("名前のついていない LED パーツがあります。");
                                 continue;
                             }
 
-                            string partSystemName = (string)partElements[i].Attribute("System");
+                            string partSystemName = (string)shorucuts[i].Attribute("System");
                             if (partSystemName == null || partSystemName == "") partSystemName = partName;
 
-                            string partSearchNamesBase = (string)partElements[i].Attribute("Search");
+                            string partSearchNamesBase = (string)shorucuts[i].Attribute("Search");
                             if (partSearchNamesBase == null || partSearchNamesBase == "") partSearchNamesBase = partName;
                             IEnumerable<string> partSearchNames = partSearchNamesBase.Split(';').Select(n => ToSearchString(n));
 
@@ -350,15 +389,15 @@ namespace DbsPlugin.Standard.Led
                                 Name = partName,
                                 SystemName = partSystemName,
                                 SearchNames = partSearchNames,
-                                X = (int)((uint?)partElements[i].Attribute("X") ?? 0),
-                                Y = (int)((uint?)partElements[i].Attribute("Y") ?? 0),
+                                X = (int)((uint?)shorucuts[i].Attribute("X") ?? 0),
+                                Y = (int)((uint?)shorucuts[i].Attribute("Y") ?? 0),
                                 DisplayingImage = 0,
 
                             };
 
                             #region Visibilityの設定
-                            int visibility = (int)((uint?)partElements[i].Attribute("Visibility") ?? 3);
-                            string visibilityConverterSourceName = (string)partElements[i].Attribute("VisibilityConverterSource");
+                            int visibility = (int)((uint?)shorucuts[i].Attribute("Visibility") ?? 3);
+                            string visibilityConverterSourceName = (string)shorucuts[i].Attribute("VisibilityConverterSource");
                             if (visibilityConverterSourceName == null)
                             {
                                 part.Visibility = visibility;
@@ -412,7 +451,7 @@ namespace DbsPlugin.Standard.Led
                             #endregion
 
                             #region DisplayPhaseConverterの取得
-                            string displayPhaseConverterSourceName = (string)partElements[i].Attribute("DisplayPhaseConverterSource");
+                            string displayPhaseConverterSourceName = (string)shorucuts[i].Attribute("DisplayPhaseConverterSource");
                             if (displayPhaseConverterSourceName == null)
                             {
                                 ThrowControlError("LED レイアウトファイル \"" + layoutXmlPath + "\"で、DisplayPhaseConverter が指定されていないパーツがあります。");
@@ -420,7 +459,7 @@ namespace DbsPlugin.Standard.Led
                             }
                             string displayPhaseConverterSourcePath = Combine(GetDirectoryName(layoutXmlPath), displayPhaseConverterSourceName);
                             IDisplayPhaseConverter displayPhaseConverter = null;
-                            if (!displaySettingConverters.Any((x) => x.Key == displayPhaseConverterSourcePath))
+                            if (!displayPhaseConverters.Any((x) => x.Key == displayPhaseConverterSourcePath))
                             {
                                 if (!File.Exists(displayPhaseConverterSourcePath))
                                 {
@@ -440,7 +479,7 @@ namespace DbsPlugin.Standard.Led
                                     if (asmType.IsClass && !asmType.IsAbstract && asmType.GetInterface(iName) != null && (asmType.Namespace ?? "").Split('.')[0] == "DbsData")
                                     {
                                         displayPhaseConverter = (IDisplayPhaseConverter)Activator.CreateInstance(asmType);
-                                        displaySettingConverters.Add(displayPhaseConverterSourcePath, displayPhaseConverter);
+                                        displayPhaseConverters.Add(displayPhaseConverterSourcePath, displayPhaseConverter);
                                         break;
                                     }
                                 }
@@ -452,13 +491,13 @@ namespace DbsPlugin.Standard.Led
                             }
                             else
                             {
-                                displayPhaseConverter = displaySettingConverters[displayPhaseConverterSourcePath];
+                                displayPhaseConverter = displayPhaseConverters[displayPhaseConverterSourcePath];
                             }
                             part.DisplayPhases = displayPhaseConverter.GetDisplayPhaseList(partSystemName);
                             #endregion
 
                             #region パーツの取得
-                            string partDefsXmlPath = Combine(GetDirectoryName(layoutXmlPath), (string)partElements[i].Attribute("Source") ?? "");
+                            string partDefsXmlPath = Combine(GetDirectoryName(layoutXmlPath), (string)shorucuts[i].Attribute("Source") ?? "");
                             if (partDefsXmlPath == GetDirectoryName(layoutXmlPath))
                             {
 
@@ -587,6 +626,193 @@ namespace DbsPlugin.Standard.Led
                         {
                             p.LedParts = parts;
                         }
+
+                        #region ショートカットファイルの取得
+                        IEnumerable<XElement> shortcutDefinitionElements = layout.Element("ShortcutDefinitions").Elements("ShortcutDefinition");
+                        foreach (XElement shortcutDefinitionElement in shortcutDefinitionElements)
+                        {
+                            string shortcutSourceName = (string)shortcutDefinitionElement.Attribute("Source");
+                            if (shortcutSourceName == null)
+                            {
+                                ThrowControlError("LED レイアウトファイル \"" + layoutXmlPath + "\" で、ファイルパスが指定されていないショートカット定義があります。");
+                                continue;
+                            }
+
+                            string shortcutSourcePath = Combine(GetDirectoryName(layoutXmlPath), shortcutSourceName);
+                            if (!File.Exists(shortcutSourcePath))
+                            {
+                                ThrowControlError("LED レイアウトファイル \"" + layoutXmlPath + "\"で指定されている ショートカットファイル \"" + shortcutSourcePath + "\" が見つかりませんでした。");
+                                continue;
+                            }
+                            
+                            IEnumerable<XElement> shortcutElements = XDocument.Load(shortcutSourcePath).Element("LedShortcuts").Elements("Shortcut");
+                            foreach (XElement shortcutElement in shortcutElements)
+                            {
+                                string shortcutName = (string)shortcutElement.Attribute("Name");
+                                if (shortcutName == null)
+                                {
+                                    ThrowControlError("LED ショートカットファイル \"" + shortcutSourcePath + "\" で、名前が指定されていないショートカットがあります。");
+                                }
+
+                                List<LedShortcutSetDefinition> shortcutSets = new List<LedShortcutSetDefinition>();
+
+                                #region Set
+                                IEnumerable<XElement> setElements = shortcutElement.Elements("Set");
+                                foreach (XElement setElement in setElements)
+                                {
+                                    LedShortcutSet set = new LedShortcutSet(parts);
+
+                                    int? targetIndex = (int?)setElement.Attribute("TargetIndex");
+                                    string targetName = (string)setElement.Attribute("Target");
+                                    if (targetIndex != null)
+                                    {
+                                        if (0 <= targetIndex && targetIndex < parts.Count)
+                                            set.TargetIndex = (int)targetIndex;
+                                        else
+                                        {
+                                            ThrowControlError("LED ショートカットファイル \"" + shortcutSourcePath + "\" で定義されているショートカット \"" + shortcutName + "\" で、存在しないパーツ ID \"" + targetIndex + "\" が指定されています。");
+                                            continue;
+                                        }
+                                    }
+                                    else if (targetName != null)
+                                    {
+                                        if (parts.Any(p => p.SystemName == targetName))
+                                            set.TargetSystemName = targetName;
+                                        else
+                                        {
+                                            ThrowControlError("LED ショートカットファイル \"" + shortcutSourcePath + "\" で定義されているショートカット \"" + shortcutName + "\" で、存在しないパーツ システム名 \"" + targetName + "\" が指定されています。");
+                                            continue;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        ThrowControlError("LED ショートカットファイル \"" + shortcutSourcePath + "\" で定義されているショートカット \"" + shortcutName + "\" で、変更先のパーツが指定されていない Set があります。");
+                                        continue;
+                                    }
+                                    
+                                    int? imageIndex = (int?)setElement.Attribute("ImageIndex");
+                                    string imageName = (string)setElement.Attribute("Image");
+                                    if (targetIndex != null)
+                                    {
+                                        if (0 <= imageIndex && imageIndex < parts[set.TargetIndex].BasedBytes.Count)
+                                            set.ImageIndex = (int)imageIndex;
+                                        else
+                                        {
+                                            ThrowControlError("LED ショートカットファイル \"" + shortcutSourcePath + "\" で定義されているショートカット \"" + shortcutName + "\" で、存在しないグループ ID \"" + imageIndex + "\" （パーツ：\"" + set.TargetSystemName + "\" ）が指定されています。");
+                                            continue;
+                                        }
+                                    }
+                                    else if (imageName != null)
+                                    {
+                                        if (parts[set.TargetIndex].BasedBytes.Any(p => p.SystemName == imageName))
+                                            set.ImageSystemName = imageName;
+                                        else
+                                        {
+                                            ThrowControlError("LED ショートカットファイル \"" + shortcutSourcePath + "\" で定義されているショートカット \"" + shortcutName + "\" で、存在しないグループ システム名 \"" + imageName + "\" （パーツ：\"" + set.TargetSystemName + "\" ）が指定されています。");
+                                            continue;
+                                        }
+                                    }
+                                    else if (parts[set.TargetIndex].BasedBytes.Count == 1)
+                                    {
+                                        set.ImageIndex = 0;
+                                    }
+                                    else
+                                    {
+                                        ThrowControlError("LED ショートカットファイル \"" + shortcutSourcePath + "\" で定義されているショートカット \"" + shortcutName + "\" で、変更先のグループが指定されていない Set があります。変更先のグループの指定が不要なのは、そのパーツにグループが１つしか存在しないときのみです。");
+                                        continue;
+                                    }
+
+                                    int? frameIndex = (int?)setElement.Attribute("FrameIndex");
+                                    string frameName = (string)setElement.Attribute("Frame");
+                                    if (frameIndex != null)
+                                    {
+                                        if (-1 <= frameIndex && frameIndex < parts[set.TargetIndex].BasedBytes[set.ImageIndex].DefinitionNames.Count)
+                                            set.FrameIndex = (int)frameIndex;
+                                        else
+                                        {
+                                            ThrowControlError("LED ショートカットファイル \"" + shortcutSourcePath + "\" で定義されているショートカット \"" + shortcutName + "\" で、存在しないコマ ID \"" + frameIndex + "\" （パーツ：\"" + set.TargetSystemName + "\"、グループ：\"" + set.ImageSystemName + "\" ）が指定されています。");
+                                            continue;
+                                        }
+                                    }
+                                    else if (frameName == ";Null;")
+                                    {
+                                        set.FrameIndex = -1;
+                                    }
+                                    else if (frameName != null)
+                                    {
+                                        if (parts[set.TargetIndex].BasedBytes[set.ImageIndex].DefinitionNames.Any(p => p.SystemName == frameName))
+                                            set.FrameSystemName = frameName;
+                                        else
+                                        {
+                                            ThrowControlError("LED ショートカットファイル \"" + shortcutSourcePath + "\" で定義されているショートカット \"" + shortcutName + "\" で、存在しないコマ システム名 \"" + frameName + "\" （パーツ：\"" + set.TargetSystemName + "\"、グループ：\"" + set.ImageSystemName + "\" ）が指定されています。");
+                                            continue;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        ThrowControlError("LED ショートカットファイル \"" + shortcutSourcePath + "\" で定義されているショートカット \"" + shortcutName + "\" で、変更先のコマが指定されていない Set があります。");
+                                        continue;
+                                    }
+
+                                    shortcutSets.Add(new LedShortcutSetDefinition() { Mode = LedShortcutSetMode.Set, Set = set });
+                                }
+                                #endregion
+
+                                #region SetConverter
+                                IEnumerable<XElement> setConverterElements = shortcutElement.Elements("SetConverter");
+                                foreach (XElement setConverterElement in setConverterElements)
+                                {
+                                    string setConverterSourceName = (string)setConverterElement.Attribute("Source");
+                                    if (setConverterSourceName == null)
+                                    {
+                                        ThrowControlError("LED ショートカットファイル \"" + shortcutSourcePath + "\" で、ファイルパスが指定されていない SetConverter があります。");
+                                        continue;
+                                    }
+
+                                    string setConverterSourcePath = Combine(GetDirectoryName(shortcutSourcePath), setConverterSourceName);
+                                    ISetConverter setConverter = null;
+                                    if (!setConverters.Any((x) => x.Key == setConverterSourcePath))
+                                    {
+                                        if (!File.Exists(setConverterSourcePath))
+                                        {
+                                            ThrowControlError("LED ショートカットファイル \"" + shortcutSourcePath + "\"で指定されている SetConverter \"" + setConverterSourcePath + "\" が見つかりませんでした。");
+                                            continue;
+                                        }
+                                        Assembly assembly = PluginConnector.CompileAssembly(setConverterSourcePath, new string[] { tempDllPath }, pluginName, type, name);
+                                        if (assembly == null)
+                                        {
+                                            ThrowControlError("SetConverter \"" + setConverterSourcePath + "\" のコンパイルに失敗しました。");
+                                            continue;
+                                        }
+                                        string iName = typeof(ISetConverter).FullName;
+                                        Type[] asmTypes = assembly.GetExportedTypes();
+                                        foreach (Type asmType in asmTypes)
+                                        {
+                                            if (asmType.IsClass && !asmType.IsAbstract && asmType.GetInterface(iName) != null && (asmType.Namespace ?? "").Split('.')[0] == "DbsData")
+                                            {
+                                                setConverter = (ISetConverter)Activator.CreateInstance(asmType);
+                                                setConverters.Add(setConverterSourcePath, setConverter);
+                                                break;
+                                            }
+                                        }
+                                        if (setConverter == null)
+                                        {
+                                            ThrowControlError("SetConverter \"" + setConverterSourcePath + "\" で、 ISetConverter を実装し DbsData.* 名前空間に存在する有効なクラスが見つかりませんでした。");
+                                            continue;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        setConverter = setConverters[setConverterSourcePath];
+                                    }
+                                    shortcutSets.Add(new LedShortcutSetDefinition() { Mode = LedShortcutSetMode.SetConverter, SetConverter = setConverter.Set });
+                                }
+                                #endregion
+
+                                shortcuts.Add(new LedShortcut() { Name = shortcutName, Sets = shortcutSets });
+                            }
+                        }
+                        #endregion
                     }
                 }
 
@@ -610,6 +836,8 @@ namespace DbsPlugin.Standard.Led
                     PixelBytes = pixels,
 
                     LedParts = parts,
+
+                    Shortcuts = shortcuts,
 
                     Mode = mode,
                 });
@@ -680,7 +908,7 @@ namespace DbsPlugin.Standard.Led
 
                         switch (mode)
                         {
-                            case LedDisplayMode.ShowFps:
+                            case LedDisplayMode.Fps:
                                 #region FPS表示
                                 b = n / 100;
                                 Parallel.For(0, 3, a =>
@@ -710,7 +938,7 @@ namespace DbsPlugin.Standard.Led
                                 });
                                 #endregion
                                 break;
-                            case LedDisplayMode.ShowElapsedMilliseconds:
+                            case LedDisplayMode.ElapsedMilliseconds:
                                 #region 経過ミリ秒表示
                                 try
                                 {
@@ -817,9 +1045,19 @@ namespace DbsPlugin.Standard.Led
                 editingUserControl.VM.PartCur = 0;
                 isFirst = true;
             }
-            UpdatePartEditing(ledControls.Find(c => c.ControlName == PluginConnector.EditingControl.ControlName));
+            LedControlInfo currentControl = ledControls.Find(c => c.ControlName == PluginConnector.EditingControl.ControlName);
+            UpdatePartEditing(currentControl);
             if (!isFirst)
                 editingUserControl.VM.PartCur = editingUserControl.VM.PartCollection.IndexOf(oldPartSelection);
+
+            UpdateShortcutEditing(currentControl);
+        }
+
+        private void UpdateShortcutEditing(LedControlInfo currentControl)
+        {
+            editingUserControl.VM.Shortcuts = currentControl.Shortcuts;
+            editingUserControl.VM.ShortcutCollection.Clear();
+            editingUserControl.VM.ShortcutCollection.AddRange(currentControl.Shortcuts.Select(s => s.Name));
         }
 
         private void UpdatePartEditing(LedControlInfo currentControl)
@@ -930,13 +1168,90 @@ namespace DbsPlugin.Standard.Led
 
         internal List<LedPart> LedParts { get; set; }
 
+        internal List<LedShortcut> Shortcuts { get; set; }
+
         internal LedDisplayMode Mode { get; set; }
     }
 
     enum LedDisplayMode
     {
         Normal = 0,
-        ShowFps,
-        ShowElapsedMilliseconds,
+        Fps,
+        ElapsedMilliseconds,
+        Debug,
+    }
+
+    internal struct LedShortcut
+    {
+        internal string Name { get; set; }
+        internal List<LedShortcutSetDefinition> Sets { get; set; }
+    }
+
+    internal struct LedShortcutSetDefinition
+    {
+        internal LedShortcutSetMode Mode { get; set; }
+        internal LedShortcutSet Set { get; set; }
+        internal Action<List<LedPart>, string> SetConverter { get; set; }
+        internal string SetConverterArgument { get; set; }
+    }
+
+    internal class LedShortcutSet
+    {
+        internal int TargetIndex { get; set; } = 0;
+        internal string TargetSystemName
+        {
+            get
+            {
+                return parts[TargetIndex].SystemName;
+            }
+            set
+            {
+                TargetIndex = parts.FindIndex(p => p.SystemName == value);
+            }
+        }
+
+        internal int ImageIndex { get; set; } = 0;
+        internal string ImageSystemName
+        {
+            get
+            {
+                return parts[TargetIndex].BasedBytes[ImageIndex].SystemName;
+            }
+            set
+            {
+                ImageIndex = parts[TargetIndex].BasedBytes.FindIndex(p => p.SystemName == value);
+            }
+        }
+
+        internal int FrameIndex { get; set; } = -1;
+        internal string FrameSystemName
+        {
+            get
+            {
+                if (FrameIndex == -1)
+                    return null;
+                else
+                    return parts[TargetIndex].BasedBytes[ImageIndex].DefinitionNames[FrameIndex].SystemName;
+            }
+            set
+            {
+                if (value == null)
+                    FrameIndex = -1;
+                else
+                    FrameIndex = parts[TargetIndex].BasedBytes[ImageIndex].DefinitionNames.FindIndex(p => p.SystemName == value);
+            }
+        }
+
+        private List<LedPart> parts;
+        internal LedShortcutSet(List<LedPart> parts)
+        {
+            this.parts = parts;
+        }
+    }
+
+    internal enum LedShortcutSetMode
+    {
+        Set = 0,
+        SetConverter
     }
 }

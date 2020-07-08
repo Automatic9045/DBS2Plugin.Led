@@ -15,6 +15,11 @@ namespace DbsPlugin.Standard.Led
         List<LedPartDisplayPhase> GetDisplayPhaseList(string partSystemName);
     }
 
+    public interface ISetConverter
+    {
+        void Set(List<LedPart> parts, string arguments);
+    }
+
     public class LedPart
     {
         public string Name { get; internal set; }
@@ -28,12 +33,11 @@ namespace DbsPlugin.Standard.Led
         public List<LedPartBasedBytesInfo> BasedBytes { get; internal set; }
 
         public bool IsDisplayed { get => DisplayingYIndex != -1; }
-        public int DisplayingImage { get; internal set; } = 0;
-        public int DisplayingXIndex { get; internal set; } = 0;
-        public int DisplayingYIndex { get; internal set; } = -1;
+        public int DisplayingImage { get; set; } = 0;
+        public int DisplayingXIndex { get; set; } = 0;
+        public int DisplayingYIndex { get; set; } = -1;
 
         public List<LedPartDisplayPhase> DisplayPhases { get; set; }
-        internal int DisplaySettingsTotalMilliseconds = -1;
 
         internal Func<string, List<LedPart>, int> VisibilityConverterFunc { get; set; }
         public int Visibility
@@ -52,19 +56,16 @@ namespace DbsPlugin.Standard.Led
         {
             get
             {
-                int total = DisplayPhases.Count;
-                if (DisplaySettingsTotalMilliseconds == -1)
+                int displaySettingsTotalMilliseconds = 0;
+                foreach (LedPartDisplayPhase displayPhase in DisplayPhases)
                 {
-                    for (int p = 0; p < total; p++)
-                    {
-                        DisplaySettingsTotalMilliseconds += DisplayPhases[p].Span;
-                    }
+                    displaySettingsTotalMilliseconds += displayPhase.Span;
                 }
 
                 long now = Stopwatch.ElapsedMilliseconds + StopWatchSurplus;
-                while (now >= DisplaySettingsTotalMilliseconds)
+                while (now >= displaySettingsTotalMilliseconds)
                 {
-                    StopWatchSurplus = (int)(now - DisplaySettingsTotalMilliseconds);
+                    StopWatchSurplus = (int)(now - displaySettingsTotalMilliseconds);
                     Stopwatch.Restart();
                     now = StopWatchSurplus;
                 }

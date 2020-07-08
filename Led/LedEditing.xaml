@@ -7,20 +7,25 @@
              xmlns:prism="http://prismlibrary.com/"
              xmlns:local="clr-namespace:DbsPlugin.Standard.Led"
              mc:Ignorable="d" 
-             d:DesignHeight="400" d:DesignWidth="640">
+             d:DesignHeight="392" d:DesignWidth="640">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
             <ColumnDefinition Width="260"/>
         </Grid.ColumnDefinitions>
-        <StackPanel Grid.Column="0" VerticalAlignment="Top" Margin="10" Orientation="Vertical">
-            <GroupBox Header="ショートカット" Margin="0,0,0,10" IsEnabled="False">
+        <StackPanel Grid.Column="0" VerticalAlignment="Top" Margin="10,5" Orientation="Vertical">
+            <GroupBox Header="ショートカット" Margin="0,0,0,10">
                 <StackPanel Margin="5" Orientation="Vertical">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition/>
-                            <ColumnDefinition Width="45"/>
+                            <ColumnDefinition Width="22"/>
+                            <ColumnDefinition Width="22"/>
                         </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
                         <TextBox Grid.Column="0" Margin="2" Padding="0,2" FontSize="12" Text="{Binding Shortcut, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                             <i:Interaction.Triggers>
                                 <i:EventTrigger EventName="TextChanged">
@@ -28,21 +33,24 @@
                                 </i:EventTrigger>
                             </i:Interaction.Triggers>
                         </TextBox>
-                        <Button Grid.Column="1" Margin="2" FontSize="12" Foreground="#f00" Content="取消" Command="{Binding ShortcutCancel}" ToolTip="検索欄の入力内容を取り消します" Focusable="False"/>
+                        <Button Grid.Column="1" Grid.ColumnSpan="2" Margin="2" FontSize="12" Foreground="#f00" Content="取消" Command="{Binding ShortcutCancel}" ToolTip="検索欄の入力内容を取り消します" Focusable="False"/>
+                        <ComboBox Grid.Row="1" VerticalAlignment="Center" Margin="2" FontSize="12" ItemsSource="{Binding ShortcutCollection}" SelectedIndex="{Binding ShortcutCur}">
+                            <i:Interaction.Triggers>
+                                <i:EventTrigger EventName="SelectionChanged">
+                                    <prism:InvokeCommandAction Command="{Binding ShortcutSelectionChanged}"/>
+                                </i:EventTrigger>
+                            </i:Interaction.Triggers>
+                        </ComboBox>
+                        <Button Grid.Column="1" Grid.Row="1" Margin="2,2,0,2" FontSize="10" Content="▼" Command="{Binding ShortcutDown}" Focusable="False"/>
+                        <Button Grid.Column="2" Grid.Row="1" Margin="0,2,2,2" FontSize="10" Content="▲" Command="{Binding ShortcutUp}" Focusable="False"/>
                     </Grid>
-                    <ComboBox VerticalAlignment="Center" Margin="2" FontSize="12" ItemsSource="{Binding ShortcutCollection}" SelectedIndex="{Binding ShortcutCur}">
-                        <i:Interaction.Triggers>
-                            <i:EventTrigger EventName="SelectionChanged">
-                                <prism:InvokeCommandAction Command="{Binding ShortcutSelectionChanged}"/>
-                            </i:EventTrigger>
-                        </i:Interaction.Triggers>
-                    </ComboBox>
+                    <Button HorizontalAlignment="Right" Margin="0,2,2,-2" Padding="20,2" FontSize="12" Content="確定" Command="{Binding RunShortcut}" Focusable="False"/>
                 </StackPanel>
             </GroupBox>
             <TabControl>
                 <TabItem Header="標準表示">
                     <StackPanel Margin="5" Orientation="Vertical">
-                        <Grid Margin="0,-3">
+                        <Grid Margin="0,-5,0,-3">
                             <Label FontSize="12" Content="パーツを選択："/>
                             <Label HorizontalAlignment="Right" FontSize="12" Content="{Binding PartHelp}"/>
                         </Grid>
@@ -75,7 +83,7 @@
                             <Button Grid.Column="2" Grid.Row="1" Margin="0,2,2,2" FontSize="10" Content="▲" Command="{Binding PartUp}" Focusable="False"/>
                         </Grid>
 
-                        <Grid Margin="0,2,0,-3">
+                        <Grid Margin="0,0,0,-3">
                             <Label FontSize="12" Content="コマ グループを選択："/>
                             <Label HorizontalAlignment="Right" FontSize="12" Content="{Binding GroupHelp}"/>
                         </Grid>
@@ -108,7 +116,7 @@
                             <Button Grid.Column="2" Grid.Row="1" Margin="0,2,2,2" FontSize="10" Content="▲" Command="{Binding GroupUp}" Focusable="False"/>
                         </Grid>
 
-                        <Grid Margin="0,2,0,-3">
+                        <Grid Margin="0,0,0,-3">
                             <Label FontSize="12" Content="コマを選択："/>
                             <Label HorizontalAlignment="Right" FontSize="12" Content="{Binding DefHelp}"/>
                         </Grid>
