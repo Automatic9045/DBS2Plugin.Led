@@ -17,9 +17,11 @@ using System.Windows.Shapes;
 using Prism.Mvvm;
 using Prism.Commands;
 
+using DbsPlugin.Standard.Led.RichTextEditorViewModels;
+
 namespace DbsPlugin.Standard.Led
 {
-    public class LedEditingUserControlViewModel : BindableBase
+    public partial class LedControllerViewModel : BindableBase
     {
         private bool _isEnabledReserving = false;
         public bool IsEnabledReserving
@@ -84,6 +86,13 @@ namespace DbsPlugin.Standard.Led
             set { SetProperty(ref _defCur, value); }
         }
 
+        private string _shortcutHelp = "";
+        public string ShortcutHelp
+        {
+            get { return _shortcutHelp; }
+            set { SetProperty(ref _shortcutHelp, value); }
+        }
+
         private string _partHelp = "";
         public string PartHelp
         {
@@ -105,10 +114,133 @@ namespace DbsPlugin.Standard.Led
             set { SetProperty(ref _defHelp, value); }
         }
 
-        internal List<LedShortcut> Shortcuts { get; set; } 
+        private bool _ShortcutIsEnabled = false;
+        public bool ShortcutIsEnabled
+        {
+            get { return _ShortcutIsEnabled; }
+            set { SetProperty(ref _ShortcutIsEnabled, value); }
+        }
+
+        private int _PreviewWidth = 0;
+        public int PreviewWidth
+        {
+            get { return _PreviewWidth; }
+            set { SetProperty(ref _PreviewWidth, value); }
+        }
+
+        private int _PreviewHeight = 0;
+        public int PreviewHeight
+        {
+            get { return _PreviewHeight; }
+            set { SetProperty(ref _PreviewHeight, value); }
+        }
+
+        private BitmapSource _preview = null;
+        public BitmapSource Preview
+        {
+            get { return _preview; }
+            set { SetProperty(ref _preview, value); }
+        }
+
+        public RichTextEditorViewModel FreeTextEditor { get; private set; }
+        public RichTextEditorViewModel FullTextEditor { get; private set; }
+
+        private string _FreeText = "";
+        public string FreeText
+        {
+            get { return _FreeText; }
+            set { SetProperty(ref _FreeText, value); }
+        }
+
+        private string _FullText = "";
+        public string FullText
+        {
+            get { return _FullText; }
+            set { SetProperty(ref _FullText, value); }
+        }
+
+        private int _FreeTextSelectionStart = 0;
+        public int FreeTextSelectionStart
+        {
+            get { return _FreeTextSelectionStart; }
+            set { SetProperty(ref _FreeTextSelectionStart, value); }
+        }
+
+        private int _FullTextSelectionStart = 0;
+        public int FullTextSelectionStart
+        {
+            get { return _FullTextSelectionStart; }
+            set { SetProperty(ref _FullTextSelectionStart, value); }
+        }
+
+        private int _FreeTextSelectionLength = 0;
+        public int FreeTextSelectionLength
+        {
+            get { return _FreeTextSelectionLength; }
+            set { SetProperty(ref _FreeTextSelectionLength, value); }
+        }
+
+        private int _FullTextSelectionLength = 0;
+        public int FullTextSelectionLength
+        {
+            get { return _FullTextSelectionLength; }
+            set { SetProperty(ref _FullTextSelectionLength, value); }
+        }
+
+        private bool _IsNotFreeTextContentLatest = false;
+        public bool IsNotFreeTextContentLatest
+        {
+            get { return _IsNotFreeTextContentLatest; }
+            set { SetProperty(ref _IsNotFreeTextContentLatest, value); }
+        }
+
+        private bool _IsNotFullTextContentLatest = false;
+        public bool IsNotFullTextContentLatest
+        {
+            get { return _IsNotFullTextContentLatest; }
+            set { SetProperty(ref _IsNotFullTextContentLatest, value); }
+        }
+
+        private bool _UseFreeText = false;
+        public bool UseFreeText
+        {
+            get { return _UseFreeText; }
+            set { SetProperty(ref _UseFreeText, value); }
+        }
+
+        private bool _UseFullText = false;
+        public bool UseFullText
+        {
+            get { return _UseFullText; }
+            set { SetProperty(ref _UseFullText, value); }
+        }
+
+        private bool _FullTextScroll = false;
+        public bool FullTextScroll
+        {
+            get { return _FullTextScroll; }
+            set { SetProperty(ref _FullTextScroll, value); }
+        }
+
+        private bool _FreeTextIsEnabled = false;
+        public bool FreeTextIsEnabled
+        {
+            get { return _FreeTextIsEnabled; }
+            set { SetProperty(ref _FreeTextIsEnabled, value); }
+        }
+
+        public DelegateCommand RunFreeText { get; internal set; }
+        public DelegateCommand RunFullText { get; internal set; }
+        public DelegateCommand FreeTextTextChanged { get; internal set; }
+        public DelegateCommand FullTextTextChanged { get; internal set; }
+        public DelegateCommand UseFreeTextChanged { get; internal set; }
+        public DelegateCommand UseFullTextChanged { get; internal set; }
+        public DelegateCommand FullTextScrollChanged { get; internal set; }
+
+        internal List<LedShortcut> Shortcuts { get; set; }
         public List<LedPart> Parts { get; internal set; }
-        public List<LedPartBasedBytesInfo> Groups { get; internal set; }
-        public List<LedPartDefinitionNamesInfo> Defs { get; internal set; }
+        public List<LedPartBitmap> Groups { get; internal set; }
+        public List<LedPartDefinition> Defs { get; internal set; }
 
         public ObservableCollection<string> ShortcutCollection { get; set; } = new ObservableCollection<string>();
         public ObservableCollection<string> PartCollection { get; } = new ObservableCollection<string>();
@@ -142,8 +274,12 @@ namespace DbsPlugin.Standard.Led
 
         public DelegateCommand RunShortcut { get; internal set; }
 
-        public LedEditingUserControlViewModel()
+        private LedControllerConnector connector;
+
+        internal LedControllerViewModel(LedControllerConnector connector, Action focusToFreeTextTextBoxAction, Action focusToFullTextTextBoxAction)
         {
+            this.connector = connector;
+
             ShortcutCancel = new DelegateCommand(() =>
             {
                 Shortcut = "";
@@ -203,20 +339,8 @@ namespace DbsPlugin.Standard.Led
             {
                 if (DefCur != 0) DefCur -= 1;
             });
-        }
-    }
 
-    /// <summary>
-    /// LedSetting.xaml の相互作用ロジック
-    /// </summary>
-    public partial class LedEditingUserControl : UserControl
-    {
-        public LedEditingUserControlViewModel VM = new LedEditingUserControlViewModel();
-
-        public LedEditingUserControl()
-        {
-            InitializeComponent();
-            DataContext = VM;
+            Initialize(focusToFreeTextTextBoxAction, focusToFullTextTextBoxAction);
         }
     }
 }

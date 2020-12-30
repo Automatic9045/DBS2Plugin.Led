@@ -1,0 +1,332 @@
+﻿<UserControl x:Class="DbsPlugin.Standard.Led.LedController"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+             xmlns:prism="http://prismlibrary.com/"
+             xmlns:local="clr-namespace:DbsPlugin.Standard.Led"
+             mc:Ignorable="d" 
+             d:DesignHeight="392" d:DesignWidth="640">
+    <DockPanel>
+        <Grid DockPanel.Dock="Right" Width="260">
+            <StackPanel VerticalAlignment="Top" Margin="10,20" Orientation="Vertical">
+                <Label FontSize="12" Content="プレビュー"/>
+                <Grid Height="160">
+                    <Rectangle Fill="Black"/>
+                    <Image Margin="10" Source="{Binding Preview}" Stretch="Uniform" StretchDirection="DownOnly"/>
+                </Grid>
+                <Label Margin="0,-3" FontSize="10" Foreground="Gray">
+                    <AccessText>
+                        <MultiBinding StringFormat="{}{0} × {1} px">
+                            <Binding Path="PreviewWidth"/>
+                            <Binding Path="PreviewHeight"/>
+                        </MultiBinding>
+                    </AccessText>
+                </Label>
+            </StackPanel>
+            <!--
+            <StackPanel VerticalAlignment="Bottom" Margin="10,10" Orientation="Vertical">
+                <CheckBox Margin="0,10" FontSize="12" Content="一括変更モード" ToolTip="複数の表示変更を予約し、一括で更新します" IsChecked="{Binding IsEnabledReserving}"/>
+                <Grid Height="45">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="0" Margin="0,0,3,0" FontSize="14" Content="解　放" Command="{Binding Dispose}">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Style.Setters>
+                                    <Setter Property="IsEnabled" Value="False"/>
+                                </Style.Setters>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsEnabledReserving}" Value="True">
+                                        <Setter Property="IsEnabled" Value="True"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                    <Button Grid.Column="1" Margin="3,0,0,0" FontSize="14" Content="発　信" Command="{Binding Send}">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Style.Setters>
+                                    <Setter Property="IsEnabled" Value="False"/>
+                                </Style.Setters>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsEnabledReserving}" Value="True">
+                                        <Setter Property="IsEnabled" Value="True"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </Grid>
+            </StackPanel>
+            -->
+        </Grid>
+        <DockPanel Margin="10,5">
+            <GroupBox Header="ショートカット" Margin="0,0,0,10" DockPanel.Dock="Top">
+                <StackPanel Margin="5" Orientation="Vertical">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="22"/>
+                            <ColumnDefinition Width="22"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <TextBox Grid.Column="0" Margin="2" Padding="0,2" FontSize="12" Text="{Binding Shortcut, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                            <i:Interaction.Triggers>
+                                <i:EventTrigger EventName="TextChanged">
+                                    <prism:InvokeCommandAction Command="{Binding ShortcutTextChanged}"/>
+                                </i:EventTrigger>
+                            </i:Interaction.Triggers>
+                        </TextBox>
+                        <Button Grid.Column="1" Grid.ColumnSpan="2" Margin="2" FontSize="12" Foreground="#f00" Content="取消" Command="{Binding ShortcutCancel}" ToolTip="検索欄の入力内容を取り消します" Focusable="False"/>
+                        <ComboBox Grid.Row="1" VerticalAlignment="Center" Margin="2" FontSize="12" ItemsSource="{Binding ShortcutCollection}" SelectedIndex="{Binding ShortcutCur}">
+                            <i:Interaction.Triggers>
+                                <i:EventTrigger EventName="SelectionChanged">
+                                    <prism:InvokeCommandAction Command="{Binding ShortcutSelectionChanged}"/>
+                                </i:EventTrigger>
+                            </i:Interaction.Triggers>
+                        </ComboBox>
+                        <Button Grid.Column="1" Grid.Row="1" Margin="2,2,0,2" FontSize="10" Content="▼" Command="{Binding ShortcutDown}" Focusable="False"/>
+                        <Button Grid.Column="2" Grid.Row="1" Margin="0,2,2,2" FontSize="10" Content="▲" Command="{Binding ShortcutUp}" Focusable="False"/>
+                    </Grid>
+                    <Grid>
+                        <Label HorizontalAlignment="Left" Margin="0,-2" FontSize="12" Content="{Binding ShortcutHelp}"/>
+                        <Button HorizontalAlignment="Right" Margin="0,2,2,-2" Padding="20,2" FontSize="12" Content="確定" Command="{Binding RunShortcut}" IsEnabled="{Binding ShortcutIsEnabled}"/>
+                    </Grid>
+                </StackPanel>
+            </GroupBox>
+            <TabControl>
+                <TabItem Header="標準表示">
+                    <StackPanel Margin="5" Orientation="Vertical">
+                        <Grid Margin="0,-5,0,-3">
+                            <Label FontSize="12" Content="パーツを選択："/>
+                            <Label HorizontalAlignment="Right" FontSize="12" Content="{Binding PartHelp}"/>
+                        </Grid>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition Width="22"/>
+                                <ColumnDefinition Width="22"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                            </Grid.RowDefinitions>
+                            <TextBox Grid.Column="0" Grid.Row="0" Margin="2" Padding="0,2" FontSize="12" Text="{Binding Part, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                <i:Interaction.Triggers>
+                                    <i:EventTrigger EventName="TextChanged">
+                                        <prism:InvokeCommandAction Command="{Binding PartTextChanged}"/>
+                                    </i:EventTrigger>
+                                </i:Interaction.Triggers>
+                            </TextBox>
+                            <Button Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="0" Margin="2" FontSize="12" Foreground="#f00" Content="取消" Command="{Binding PartCancel}" ToolTip="検索欄の入力内容を取り消します" Focusable="False"/>
+                            <ComboBox Grid.Column="0" Grid.Row="1" VerticalAlignment="Center" Margin="2" FontSize="12" ItemsSource="{Binding PartCollection}" SelectedIndex="{Binding PartCur}">
+                                <i:Interaction.Triggers>
+                                    <i:EventTrigger EventName="SelectionChanged">
+                                        <prism:InvokeCommandAction Command="{Binding PartSelectionChanged}"/>
+                                    </i:EventTrigger>
+                                </i:Interaction.Triggers>
+                            </ComboBox>
+                            <Button Grid.Column="1" Grid.Row="1" Margin="2,2,0,2" FontSize="10" Content="▼" Command="{Binding PartDown}" Focusable="False"/>
+                            <Button Grid.Column="2" Grid.Row="1" Margin="0,2,2,2" FontSize="10" Content="▲" Command="{Binding PartUp}" Focusable="False"/>
+                        </Grid>
+
+                        <Grid Margin="0,0,0,-3">
+                            <Label FontSize="12" Content="コマ グループを選択："/>
+                            <Label HorizontalAlignment="Right" FontSize="12" Content="{Binding GroupHelp}"/>
+                        </Grid>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition Width="22"/>
+                                <ColumnDefinition Width="22"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                            </Grid.RowDefinitions>
+                            <TextBox Grid.Column="0" Grid.Row="0" Margin="2" Padding="0,2" FontSize="12" Text="{Binding Group, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                <i:Interaction.Triggers>
+                                    <i:EventTrigger EventName="TextChanged">
+                                        <prism:InvokeCommandAction Command="{Binding GroupTextChanged}"/>
+                                    </i:EventTrigger>
+                                </i:Interaction.Triggers>
+                            </TextBox>
+                            <Button Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="0" Margin="2" FontSize="12" Foreground="#f00" Content="取消" Command="{Binding GroupCancel}" ToolTip="検索欄の入力内容を取り消します" Focusable="False"/>
+                            <ComboBox Grid.Column="0" Grid.Row="1" VerticalAlignment="Center" Margin="2" FontSize="12" ItemsSource="{Binding GroupCollection}" SelectedIndex="{Binding GroupCur}">
+                                <i:Interaction.Triggers>
+                                    <i:EventTrigger EventName="SelectionChanged">
+                                        <prism:InvokeCommandAction Command="{Binding GroupSelectionChanged}"/>
+                                    </i:EventTrigger>
+                                </i:Interaction.Triggers>
+                            </ComboBox>
+                            <Button Grid.Column="1" Grid.Row="1" Margin="2,2,0,2" FontSize="10" Content="▼" Command="{Binding GroupDown}" Focusable="False"/>
+                            <Button Grid.Column="2" Grid.Row="1" Margin="0,2,2,2" FontSize="10" Content="▲" Command="{Binding GroupUp}" Focusable="False"/>
+                        </Grid>
+
+                        <Grid Margin="0,0,0,-3">
+                            <Label FontSize="12" Content="コマを選択："/>
+                            <Label HorizontalAlignment="Right" FontSize="12" Content="{Binding DefHelp}"/>
+                        </Grid>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition Width="22"/>
+                                <ColumnDefinition Width="22"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                            </Grid.RowDefinitions>
+                            <TextBox Grid.Column="0" Grid.Row="0" Margin="2" Padding="0,2" FontSize="12" Text="{Binding Def, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                <TextBox.ToolTip>
+                                    <TextBlock>
+                                        特殊キーワードを使用出来ます：<LineBreak/>
+                                        &quot;n;&quot; …非表示を指定<LineBreak/>
+                                        &quot;<Italic>[コマ名]</Italic> ;&quot; …その名前のコマを指定
+                                    </TextBlock>
+                                </TextBox.ToolTip>
+                                <i:Interaction.Triggers>
+                                    <i:EventTrigger EventName="TextChanged">
+                                        <prism:InvokeCommandAction Command="{Binding DefTextChanged}"/>
+                                    </i:EventTrigger>
+                                </i:Interaction.Triggers>
+                            </TextBox>
+                            <Button Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="0" Margin="2" FontSize="12" Foreground="#f00" Content="取消" Command="{Binding DefCancel}" ToolTip="検索欄の入力内容を取り消します" Focusable="False"/>
+                            <ComboBox Grid.Column="0" Grid.Row="1" VerticalAlignment="Center" Margin="2" FontSize="12" ItemsSource="{Binding DefCollection}" SelectedIndex="{Binding DefCur}">
+                                <i:Interaction.Triggers>
+                                    <i:EventTrigger EventName="SelectionChanged">
+                                        <prism:InvokeCommandAction Command="{Binding DefSelectionChanged}"/>
+                                    </i:EventTrigger>
+                                </i:Interaction.Triggers>
+                            </ComboBox>
+                            <Button Grid.Column="1" Grid.Row="1" Margin="2,2,0,2" FontSize="10" Content="▼" Command="{Binding DefDown}" Focusable="False"/>
+                            <Button Grid.Column="2" Grid.Row="1" Margin="0,2,2,2" FontSize="10" Content="▲" Command="{Binding DefUp}" Focusable="False"/>
+                        </Grid>
+                    </StackPanel>
+                </TabItem>
+                <TabItem Header="自由入力">
+                    <DockPanel Margin="5,5,5,0" IsEnabled="{Binding FreeTextIsEnabled}">
+                        <CheckBox DockPanel.Dock="Top" Content="自由入力を使用する" IsChecked="{Binding UseFreeText}">
+                            <i:Interaction.Triggers>
+                                <i:EventTrigger EventName="Checked">
+                                    <prism:InvokeCommandAction Command="{Binding UseFreeTextChanged}"/>
+                                </i:EventTrigger>
+                                <i:EventTrigger EventName="Unchecked">
+                                    <prism:InvokeCommandAction Command="{Binding UseFreeTextChanged}"/>
+                                </i:EventTrigger>
+                            </i:Interaction.Triggers>
+                        </CheckBox>
+                        <Grid DockPanel.Dock="Top" Margin="0,0,0,-3">
+                            <Label FontSize="12" Content="表示位置："/>
+                            <Label HorizontalAlignment="Right" FontSize="12" Content="{Binding PartHelp}"/>
+                        </Grid>
+                        <Grid DockPanel.Dock="Top">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition Width="22"/>
+                                <ColumnDefinition Width="22"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                            </Grid.RowDefinitions>
+                            <TextBox Grid.Column="0" Grid.Row="0" Margin="2" Padding="0,2" FontSize="12" Text="{Binding Part, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                <i:Interaction.Triggers>
+                                    <i:EventTrigger EventName="TextChanged">
+                                        <prism:InvokeCommandAction Command="{Binding PartTextChanged}"/>
+                                    </i:EventTrigger>
+                                </i:Interaction.Triggers>
+                            </TextBox>
+                            <Button Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="0" Margin="2" FontSize="12" Foreground="#f00" Content="取消" Command="{Binding PartCancel}" ToolTip="検索欄の入力内容を取り消します" Focusable="False"/>
+                            <ComboBox Grid.Column="0" Grid.Row="1" VerticalAlignment="Center" Margin="2" FontSize="12" ItemsSource="{Binding PartCollection}" SelectedIndex="{Binding PartCur}">
+                                <i:Interaction.Triggers>
+                                    <i:EventTrigger EventName="SelectionChanged">
+                                        <prism:InvokeCommandAction Command="{Binding PartSelectionChanged}"/>
+                                    </i:EventTrigger>
+                                </i:Interaction.Triggers>
+                            </ComboBox>
+                            <Button Grid.Column="1" Grid.Row="1" Margin="2,2,0,2" FontSize="10" Content="▼" Command="{Binding PartDown}" Focusable="False"/>
+                            <Button Grid.Column="2" Grid.Row="1" Margin="0,2,2,2" FontSize="10" Content="▲" Command="{Binding PartUp}" Focusable="False"/>
+                        </Grid>
+                        <Separator DockPanel.Dock="Top"/>
+                        <Grid DockPanel.Dock="Top">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition Width="70"/>
+                            </Grid.ColumnDefinitions>
+                            <local:SelectionBindableTextBox Grid.Column="0" x:Name="FreeTextTextBox" Margin="2" Padding="0,2" FontSize="12"
+                                                            Text="{Binding FreeText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                            BindableSelectionStart="{Binding FreeTextSelectionStart, Mode=TwoWay}"
+                                                            BindableSelectionLength="{Binding FreeTextSelectionLength, Mode=TwoWay}">
+                                <i:Interaction.Triggers>
+                                    <i:EventTrigger EventName="TextChanged">
+                                        <prism:InvokeCommandAction Command="{Binding FreeTextTextChanged}"/>
+                                    </i:EventTrigger>
+                                </i:Interaction.Triggers>
+                            </local:SelectionBindableTextBox>
+                            <Button Grid.Column="1" Margin="2" FontSize="12" Content="確定" Command="{Binding RunFreeText}" IsEnabled="{Binding IsNotFreeTextContentLatest}"/>
+                        </Grid>
+                        <local:RichTextEditor Margin="2" DataContext="{Binding FreeTextEditor, Mode=OneTime}"/>
+                    </DockPanel>
+                </TabItem>
+                <TabItem Header="一行表示">
+                    <Grid Margin="5,5,5,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <CheckBox Grid.Column="0" Content="一行表示を使用する" IsChecked="{Binding UseFullText}">
+                                <i:Interaction.Triggers>
+                                    <i:EventTrigger EventName="Checked">
+                                        <prism:InvokeCommandAction Command="{Binding UseFullTextChanged}"/>
+                                    </i:EventTrigger>
+                                    <i:EventTrigger EventName="Unchecked">
+                                        <prism:InvokeCommandAction Command="{Binding UseFullTextChanged}"/>
+                                    </i:EventTrigger>
+                                </i:Interaction.Triggers>
+                            </CheckBox>
+                            <CheckBox Grid.Column="1" Content="スクロールする" IsChecked="{Binding FullTextScroll}">
+                                <i:Interaction.Triggers>
+                                    <i:EventTrigger EventName="Checked">
+                                        <prism:InvokeCommandAction Command="{Binding FullTextScrollChanged}"/>
+                                    </i:EventTrigger>
+                                    <i:EventTrigger EventName="Unchecked">
+                                        <prism:InvokeCommandAction Command="{Binding FullTextScrollChanged}"/>
+                                    </i:EventTrigger>
+                                </i:Interaction.Triggers>
+                            </CheckBox>
+                            <Button Grid.Column="2" Margin="2,0,2,2" Padding="20,2" FontSize="12" Content="確定" Command="{Binding RunFullText}" IsEnabled="{Binding IsNotFullTextContentLatest}"/>
+                        </Grid>
+                        <local:SelectionBindableTextBox Grid.Row="1" x:Name="FullTextTextBox" Margin="2" Padding="0,2" FontSize="12" VerticalScrollBarVisibility="Visible" TextWrapping="Wrap" 
+                                                        Text="{Binding FullText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                        BindableSelectionStart="{Binding FullTextSelectionStart, Mode=TwoWay}"
+                                                        BindableSelectionLength="{Binding FullTextSelectionLength, Mode=TwoWay}">
+                            <i:Interaction.Triggers>
+                                <i:EventTrigger EventName="TextChanged">
+                                    <prism:InvokeCommandAction Command="{Binding FullTextTextChanged}"/>
+                                </i:EventTrigger>
+                            </i:Interaction.Triggers>
+                        </local:SelectionBindableTextBox>
+                        <local:RichTextEditor Grid.Row="3" Margin="2" Height="107" DataContext="{Binding FullTextEditor, Mode=OneTime}"/>
+                    </Grid>
+                </TabItem>
+            </TabControl>
+        </DockPanel>
+    </DockPanel>
+</UserControl>

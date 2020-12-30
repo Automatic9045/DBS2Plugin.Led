@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="ソース ファイル\LedDrawingCalculator">
+      <UniqueIdentifier>{d4349215-e261-40f8-a78e-21f7a2be82bf}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -20,6 +23,15 @@
     </ClInclude>
     <ClInclude Include="targetver.h">
       <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="core.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="exceptions.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="exceptions.cpp">
+      <Filter>ソース ファイル</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -29,8 +41,26 @@
     <ClCompile Include="dllmain.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="draw.cpp">
+      <Filter>ソース ファイル\LedDrawingCalculator</Filter>
+    </ClCompile>
     <ClCompile Include="Led.Calculation.cpp">
       <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="writeImageToDots.cpp">
+      <Filter>ソース ファイル\LedDrawingCalculator</Filter>
+    </ClCompile>
+    <ClCompile Include="writeStringToDots.cpp">
+      <Filter>ソース ファイル\LedDrawingCalculator</Filter>
+    </ClCompile>
+    <ClCompile Include="copyDots.cpp">
+      <Filter>ソース ファイル\LedDrawingCalculator</Filter>
+    </ClCompile>
+    <ClCompile Include="fillDots.cpp">
+      <Filter>ソース ファイル\LedDrawingCalculator</Filter>
+    </ClCompile>
+    <ClCompile Include="clearDots.cpp">
+      <Filter>ソース ファイル\LedDrawingCalculator</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

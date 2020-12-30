@@ -4,12 +4,13 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{DF20BCFC-D1DE-42C3-9C94-25A61BCFE656}</ProjectGuid>
+    <ProjectGuid>{F8DA0D91-C610-48E6-B2A6-1F9CB82243D1}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>DbsPlugin.Standard.Led</RootNamespace>
-    <AssemblyName>Standard.Led.PartDefinition</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <RootNamespace>Led.CalculatorGateway</RootNamespace>
+    <AssemblyName>Led.CalculatorGateway</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -38,10 +39,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="LedPart.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="System" />
+    <Compile Include="CalculatorGateway.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

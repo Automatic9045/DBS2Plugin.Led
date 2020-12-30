@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>DbsPlugin.Standard</RootNamespace>
     <AssemblyName>DbsPlugin.Standard.Led</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <TargetFrameworkProfile />
@@ -41,13 +41,38 @@
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
+    <Compile Include="Classes\LedFontFactory.cs" />
+    <Compile Include="LedController\RichTextEditor\ViewModels\PartSetter.cs" />
+    <Compile Include="LedController\RichTextEditor\ViewModels\StopSetter.cs" />
+    <Compile Include="LedController\RichTextEditor\ViewModels\FlashSetter.cs" />
+    <Compile Include="LedController\RichTextEditor\ViewModels\BackgroundColorSetter.cs" />
+    <Compile Include="LedController\SelectionBindableTextBox.cs" />
+    <Compile Include="LedController\RichTextEditor\ViewModels\FontColorSetter.cs" />
+    <Compile Include="Loaders\Loader.Shortcuts.SetLoader\Loader.Shortcuts.SetLoader.SetConverter.cs" />
+    <Compile Include="Loaders\Loader.Shortcuts.SetLoader\Loader.Shortcuts.SetLoader.Set.cs" />
+    <Compile Include="Loaders\Loader.Shortcuts.SetLoader\Loader.Shortcuts.SetLoader.cs" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="LedEditing.xaml.cs">
-      <DependentUpon>LedEditing.xaml</DependentUpon>
+    <Compile Include="Loaders\Loader.Shortcuts.cs" />
+    <Compile Include="Loaders\Loader.cs" />
+    <Compile Include="Loaders\Loader.Fonts.cs" />
+    <Compile Include="LedController\RichTextEditor\RichTextEditorViewModel.cs" />
+    <Compile Include="LedController\RichTextEditor\ViewModels\FontSetter.cs" />
+    <Compile Include="LedController\RichTextEditor\StringToColorConverter.cs" />
+    <Compile Include="LedController\RichTextEditor\RichTextEditor.xaml.cs">
+      <DependentUpon>RichTextEditor.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Tick\ElapsedMilliSeconds.cs" />
+    <Compile Include="LedController\LedController.ViewModel.cs" />
+    <Compile Include="LedController\LedController.ViewModel.Initializer.cs" />
+    <Compile Include="LedController\LedControllerConnector.cs" />
+    <Compile Include="LedController\LedController.xaml.cs">
+      <DependentUpon>LedController.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Tick\Fps.cs" />
     <Compile Include="Main.cs" />
+    <Compile Include="Add.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="CommonServiceLocator, Version=2.0.5.0, Culture=neutral, PublicKeyToken=489b6accfaf20ef0, processorArchitecture=MSIL">
@@ -56,25 +81,29 @@
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="Microsoft.Xaml.Behaviors, Version=1.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\DepartureBoardSimulator\packages\Microsoft.Xaml.Behaviors.Wpf.1.1.19\lib\net45\Microsoft.Xaml.Behaviors.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
-    <Reference Include="Prism, Version=7.2.0.1422, Culture=neutral, PublicKeyToken=40ee6c3a2184dc59, processorArchitecture=MSIL">
-      <HintPath>..\..\DepartureBoardSimulator\packages\Prism.Core.7.2.0.1422\lib\net45\Prism.dll</HintPath>
+    <Reference Include="Prism, Version=8.0.0.1909, Culture=neutral, PublicKeyToken=40ee6c3a2184dc59, processorArchitecture=MSIL">
+      <HintPath>..\..\DepartureBoardSimulator\packages\Prism.Core.8.0.0.1909\lib\net47\Prism.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Prism.Unity.Wpf, Version=7.2.0.1422, Culture=neutral, PublicKeyToken=40ee6c3a2184dc59, processorArchitecture=MSIL">
-      <HintPath>..\..\DepartureBoardSimulator\packages\Prism.Unity.7.2.0.1422\lib\net45\Prism.Unity.Wpf.dll</HintPath>
+    <Reference Include="Prism.Unity.Wpf, Version=8.0.0.1909, Culture=neutral, PublicKeyToken=40ee6c3a2184dc59, processorArchitecture=MSIL">
+      <HintPath>..\..\DepartureBoardSimulator\packages\Prism.Unity.8.0.0.1909\lib\net48\Prism.Unity.Wpf.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Prism.Wpf, Version=7.2.0.1422, Culture=neutral, PublicKeyToken=40ee6c3a2184dc59, processorArchitecture=MSIL">
-      <HintPath>..\..\DepartureBoardSimulator\packages\Prism.Wpf.7.2.0.1422\lib\net45\Prism.Wpf.dll</HintPath>
+    <Reference Include="Prism.Wpf, Version=8.0.0.1909, Culture=neutral, PublicKeyToken=40ee6c3a2184dc59, processorArchitecture=MSIL">
+      <HintPath>..\..\DepartureBoardSimulator\packages\Prism.Wpf.8.0.0.1909\lib\net48\Prism.Wpf.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.6.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\..\DepartureBoardSimulator\packages\System.Runtime.CompilerServices.Unsafe.4.7.1\lib\netstandard1.0\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\DepartureBoardSimulator\packages\System.Runtime.CompilerServices.Unsafe.5.0.0\lib\net45\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
@@ -85,10 +114,6 @@
       <HintPath>..\..\DepartureBoardSimulator\packages\System.ValueTuple.4.5.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\..\DepartureBoardSimulator\packages\Prism.Wpf.7.2.0.1422\lib\net45\System.Windows.Interactivity.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
@@ -96,8 +121,8 @@
       <HintPath>..\..\DepartureBoardSimulator\packages\Unity.Abstractions.5.11.6\lib\net45\Unity.Abstractions.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Unity.Container, Version=5.11.8.0, Culture=neutral, PublicKeyToken=489b6accfaf20ef0, processorArchitecture=MSIL">
-      <HintPath>..\..\DepartureBoardSimulator\packages\Unity.Container.5.11.8\lib\net45\Unity.Container.dll</HintPath>
+    <Reference Include="Unity.Container, Version=5.11.10.0, Culture=neutral, PublicKeyToken=489b6accfaf20ef0, processorArchitecture=MSIL">
+      <HintPath>..\..\DepartureBoardSimulator\packages\Unity.Container.5.11.10\lib\net48\Unity.Container.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="WindowsBase" />
@@ -108,20 +133,30 @@
       <Name>DepartureBoardSimulator</Name>
       <Private>False</Private>
     </ProjectReference>
-    <ProjectReference Include="..\Led.PartDefinition\Led.PartDefinition.csproj">
+    <ProjectReference Include="..\Led.CalculatorGateway\Led.CalculatorGateway.csproj">
+      <Project>{f8da0d91-c610-48e6-b2a6-1f9cb82243d1}</Project>
+      <Name>Led.CalculatorGateway</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Led.PartDefinition\Led.Classes.csproj">
       <Project>{df20bcfc-d1de-42c3-9c94-25a61bcfe656}</Project>
-      <Name>Led.PartDefinition</Name>
-      <Private>False</Private>
+      <Name>Led.Classes</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <ItemGroup>
-    <Page Include="LedEditing.xaml">
+    <Page Include="LedController\LedController.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="LedController\RichTextEditor\RichTextEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="XmlParser\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

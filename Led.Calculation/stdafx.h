@@ -14,3 +14,11 @@
 
 
 // プログラムに必要な追加ヘッダーをここで参照してください
+#include <string>
+#include <cmath>
+#include <vector>
+#include <map>
+#include <unordered_map>
+#include <algorithm>
+#include <stdexcept>
+#include <wingdi.h>
