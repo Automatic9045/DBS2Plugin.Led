@@ -28,8 +28,8 @@ namespace DbsPlugin.Standard.Led.RichTextEditorViewModels
         {
             this.addCommandAction = addCommandAction;
 
-            Run = CreateCommand(Text);
-            
+            Run = new DelegateCommand(() => addCommandAction.Invoke($"{{bg:{Text}}}"));
+
             RunOrange = CreateCommand("#ff8000");
             RunGreen = CreateCommand("#00ff00");
             RunRed = CreateCommand("#ff0000");
