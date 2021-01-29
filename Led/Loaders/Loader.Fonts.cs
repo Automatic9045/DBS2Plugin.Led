@@ -20,7 +20,7 @@ namespace DbsPlugin.Standard.Led
             List<LedFont> fonts = new List<LedFont>();
 
             XElement fontDefinitionsElement = Element.Element("FontDefinitions");
-            if (fontDefinitionsElement == null)
+            if (fontDefinitionsElement is null)
             {
                 throwControlErrorAction.Invoke("LED レイアウトファイル \"" + layoutXmlPath + "\" にフォント定義がありません。");
                 return new List<LedFont>();
@@ -30,7 +30,7 @@ namespace DbsPlugin.Standard.Led
             foreach (XElement fontDefinitionElement in fontDefinitionElements)
             {
                 string fontSourceName = (string)fontDefinitionElement.Attribute("Source");
-                if (fontSourceName == null)
+                if (fontSourceName is null)
                 {
                     throwControlErrorAction.Invoke("LED レイアウトファイル \"" + layoutXmlPath + "\" で、ファイルパスが指定されていないフォント定義があります。");
                     continue;
@@ -44,7 +44,7 @@ namespace DbsPlugin.Standard.Led
                 }
 
                 XElement fontsElement = XDocument.Load(fontSourcePath).Element("LedFonts");
-                if (fontsElement == null)
+                if (fontsElement is null)
                 {
                     throwControlErrorAction.Invoke("\"" + fontSourcePath + "\" はフォントファイルではありません。");
                     continue;
@@ -53,30 +53,30 @@ namespace DbsPlugin.Standard.Led
                 foreach (XElement fontElement in fontElements)
                 {
                     string name = (string)fontElement.Attribute("Name");
-                    if (name == null)
+                    if (name is null)
                     {
                         throwControlErrorAction.Invoke("LED フォントファイル \"" + fontSourcePath + "\" で、名前が指定されていないフォントがあります。");
                     }
 
                     string systemName = (string)fontElement.Attribute("System");
-                    if (systemName == null || systemName == "") systemName = name;
+                    if (systemName is null || systemName == "") systemName = name;
                     if (fonts.Any(f => f.SystemName == systemName))
                     {
                         throwControlErrorAction.Invoke("LED フォントファイル \"" + fontSourcePath + "\" で指定されているフォントのシステム名 \"" + systemName + "\" は重複しています。");
                     }
 
                         string searchNamesElement = (string)fontElement.Attribute("Search");
-                    if (searchNamesElement == null || searchNamesElement == "") searchNamesElement = name;
+                    if (searchNamesElement is null || searchNamesElement == "") searchNamesElement = name;
                     IEnumerable<string> searchNames = searchNamesElement.Split(';').Select(n => ToSearchString(n));
 
                     string fontFamily = (string)fontElement.Attribute("FontFamily");
-                    if (fontFamily == null)
+                    if (fontFamily is null)
                     {
                         throwControlErrorAction.Invoke("LED フォントファイル \"" + fontSourcePath + "\" で指定されているフォント \"" + systemName + "\" で、フォントファミリーが指定されていません。");
                     }
 
                     int? fontSize = (int?)fontElement.Attribute("FontSize");
-                    if (fontSize == null)
+                    if (fontSize is null)
                     {
                         throwControlErrorAction.Invoke("LED フォントファイル \"" + fontSourcePath + "\" で指定されているフォント \"" + systemName + "\" で、フォントサイズが指定されていません。");
                     }
@@ -91,7 +91,7 @@ namespace DbsPlugin.Standard.Led
                     }
 
                     int? fontWeight = (int?)fontElement.Attribute("FontWeight");
-                    if (fontWeight == null)
+                    if (fontWeight is null)
                     {
                         throwControlErrorAction.Invoke("LED フォントファイル \"" + fontSourcePath + "\" で指定されているフォント \"" + systemName + "\" で、フォントウェイトが指定されていません。");
                     }
@@ -101,7 +101,7 @@ namespace DbsPlugin.Standard.Led
                     }
 
                     int? antialiasFormat = (int?)fontElement.Attribute("Antialias");
-                    if (antialiasFormat == null)
+                    if (antialiasFormat is null)
                     {
                         throwControlErrorAction.Invoke("LED フォントファイル \"" + fontSourcePath + "\" で指定されているフォント \"" + systemName + "\" で、アンチエイリアスが指定されていません。");
                     }

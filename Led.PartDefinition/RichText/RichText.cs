@@ -227,7 +227,7 @@ namespace DbsPlugin.Standard.Led
                         }
                     }
 
-                    if (font != null)
+                    if (!(font is null))
                     {
                         text.Add(new Run(innerString)
                         {
@@ -296,7 +296,7 @@ namespace DbsPlugin.Standard.Led
 
             List<int> stopPositions = new List<int>();
 
-            if (BiggestFont != null)
+            if (!(BiggestFont is null))
             {
                 int ascent = calculatorGateway.GetStringAscent(BiggestFont.FontIndex);
                 int y = Height - calculatorGateway.GetStringHeight(BiggestFont.FontIndex);

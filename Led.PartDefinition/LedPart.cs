@@ -36,7 +36,7 @@ namespace DbsPlugin.Standard.Led
         public List<LedPartBitmap> Bitmaps { get; internal set; }
 
         public bool IsDisplayed { get => DisplayingYIndex != -1; }
-        public int DisplayingBitmap { get; set; } = 0;
+        public int DisplayingBitmapIndex { get; set; } = 0;
         public int DisplayingXIndex { get; set; } = 0;
         public int DisplayingYIndex { get; set; } = -1;
 

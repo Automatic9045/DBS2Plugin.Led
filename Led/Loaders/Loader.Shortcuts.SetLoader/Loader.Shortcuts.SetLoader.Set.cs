@@ -21,7 +21,7 @@ namespace DbsPlugin.Standard.Led
 
                 int? targetIndex = (int?)setElement.Attribute("TargetIndex");
                 string targetName = (string)setElement.Attribute("Target");
-                if (targetIndex != null)
+                if (!(targetIndex is null))
                 {
                     if (0 <= targetIndex && targetIndex < parts.Count)
                         set.TargetIndex = (int)targetIndex;
@@ -31,7 +31,7 @@ namespace DbsPlugin.Standard.Led
                         return null;
                     }
                 }
-                else if (targetName != null)
+                else if (!(targetName is null))
                 {
                     if (parts.Any(p => p.SystemName == targetName))
                         set.TargetSystemName = targetName;
@@ -49,7 +49,7 @@ namespace DbsPlugin.Standard.Led
 
                 int? imageIndex = (int?)setElement.Attribute("ImageIndex");
                 string imageName = (string)setElement.Attribute("Image");
-                if (targetIndex != null)
+                if (!(targetIndex is null))
                 {
                     if (0 <= imageIndex && imageIndex < parts[set.TargetIndex].Bitmaps.Count)
                         set.ImageIndex = (int)imageIndex;
@@ -59,7 +59,7 @@ namespace DbsPlugin.Standard.Led
                         return null;
                     }
                 }
-                else if (imageName != null)
+                else if (!(imageName is null))
                 {
                     if (parts[set.TargetIndex].Bitmaps.Any(p => p.SystemName == imageName))
                         set.ImageSystemName = imageName;
@@ -81,7 +81,7 @@ namespace DbsPlugin.Standard.Led
 
                 int? frameIndex = (int?)setElement.Attribute("FrameIndex");
                 string frameName = (string)setElement.Attribute("Frame");
-                if (frameIndex != null)
+                if (!(frameIndex is null))
                 {
                     if (-1 <= frameIndex && frameIndex < parts[set.TargetIndex].Bitmaps[set.ImageIndex].Definitions.Count)
                         set.FrameIndex = (int)frameIndex;
@@ -95,7 +95,7 @@ namespace DbsPlugin.Standard.Led
                 {
                     set.FrameIndex = -1;
                 }
-                else if (frameName != null)
+                else if (!(frameName is null))
                 {
                     if (parts[set.TargetIndex].Bitmaps[set.ImageIndex].Definitions.Any(p => p.SystemName == frameName))
                         set.FrameSystemName = frameName;

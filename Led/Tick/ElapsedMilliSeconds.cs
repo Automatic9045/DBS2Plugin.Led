@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace DbsPlugin.Standard.Led
 {
-    internal class ElapsedMilliSecondsLedCalculator
+    internal class MillisecLedCalculator
     {
         internal static void WriteToDots(byte[] dots, int dotsStride, int milliSecond)
         {

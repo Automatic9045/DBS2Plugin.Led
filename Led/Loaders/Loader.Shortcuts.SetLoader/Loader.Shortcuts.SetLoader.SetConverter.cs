@@ -45,7 +45,7 @@ namespace DbsPlugin.Standard.Led
                     Type[] asmTypes = assembly.GetExportedTypes();
                     foreach (Type asmType in asmTypes)
                     {
-                        if (asmType.IsClass && !asmType.IsAbstract && asmType.GetInterface(iName) != null && (asmType.Namespace ?? "").Split('.')[0] == "DbsData")
+                        if (asmType.IsClass && !asmType.IsAbstract && !(asmType.GetInterface(iName) is null) && (asmType.Namespace ?? "").Split('.')[0] == "DbsData")
                         {
                             setConverter = (ILedShortcutSetConverter)Activator.CreateInstance(asmType);
                             setConverters.Add(setConverterSourcePath, setConverter);

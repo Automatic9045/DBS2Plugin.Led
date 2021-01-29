@@ -8,6 +8,7 @@ namespace DbsPlugin.Standard.Led
     internal class LedControl
     {
         internal string ControlName { get; set; }
+        internal string Path { get; set; }
 
         internal int Width { get; set; }
         internal int Height { get; set; }

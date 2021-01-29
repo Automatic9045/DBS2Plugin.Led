@@ -44,7 +44,7 @@ namespace DbsPlugin.Standard.Led
             {
                 XDocument layoutXml = XDocument.Load(this.layoutXmlPath);
                 Element = layoutXml.Element("LedDisplayLayout");
-                if (Element == null)
+                if (Element is null)
                 {
                     this.throwControlErrorAction.Invoke("\"" + this.layoutXmlPath + "\" は LED レイアウトファイルではありません。");
                 }

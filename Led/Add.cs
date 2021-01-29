@@ -29,7 +29,7 @@ namespace DbsPlugin.Standard.Led
 {
     public partial class Led : DbsPluginBase
     {
-        private void AddLedDisplay(XElement element, LedDisplayMode mode, string xmlPath)
+        private void AddLedDisplay(XElement element, LedDisplayMode mode)
         {
             string type = element.Name.LocalName;
             string name = (string)element.Attribute("Name");
@@ -73,7 +73,7 @@ namespace DbsPlugin.Standard.Led
                 UseControllerWindow = mode == LedDisplayMode.Normal,
                 Controller = controller,
             };
-            if (controlInfo.ControlName != null)
+            if (!(controlInfo.ControlName is null))
             {
                 byte[] dots = new byte[dotStride * dotHeight];
                 byte[] pixels = new byte[stride * height];
@@ -86,17 +86,19 @@ namespace DbsPlugin.Standard.Led
                 LedFont defaultFont = null;
                 LedFont biggestFont = null;
 
+                string layoutXmlPath = null;
+
                 if (mode == LedDisplayMode.Normal)
                 {
-                    string layoutXmlPath = Combine(xmlPath, (string)element.Attribute("Source") ?? "");
+                    layoutXmlPath = Combine(GetDirectoryName(PluginConnector.PanelXmlPath), (string)element.Attribute("Source") ?? "");
                     Loader loader = new Loader(layoutXmlPath, tempDllPath, calculatorGateway, ThrowControlError, (sourcePath, references) => PluginConnector.CompileAssembly(sourcePath, references, PluginName, type, name));
 
-                    if (loader.Element != null)
+                    if (!(loader.Element is null))
                     {
                         ledFonts = loader.LoadFonts();
 
                         string defaultFontName = (string)loader.Element.Attribute("DefaultFont");
-                        if (defaultFontName == null)
+                        if (defaultFontName is null)
                         {
                             ThrowControlError("LED レイアウトファイル \"" + layoutXmlPath + "\" で、デフォルトフォントが指定されていません。");
                             return;
@@ -112,7 +114,7 @@ namespace DbsPlugin.Standard.Led
                         }
 
                         string biggestFontName = (string)loader.Element.Attribute("BiggestFont");
-                        if (biggestFontName == null)
+                        if (biggestFontName is null)
                         {
                             biggestFont = defaultFont;
                         }
@@ -127,23 +129,23 @@ namespace DbsPlugin.Standard.Led
                         }
 
                         XElement partDefinitionsElement = loader.Element.Element("PartDefinitions");
-                        if (partDefinitionsElement != null)
+                        if (!(partDefinitionsElement is null))
                         {
                             List<XElement> partElements = partDefinitionsElement.Elements("Part").ToList();
                             partElements.ForEach(partElement =>
                             {
                                 string partName = (string)partElement.Attribute("Name");
-                                if (partName == null)
+                                if (partName is null)
                                 {
                                     ThrowControlError("名前のついていない LED パーツがあります。");
                                     return;
                                 }
 
                                 string partSystemName = (string)partElement.Attribute("System");
-                                if (partSystemName == null || partSystemName == "") partSystemName = partName;
+                                if (partSystemName is null || partSystemName == "") partSystemName = partName;
 
                                 string partSearchNamesElement = (string)partElement.Attribute("Search");
-                                if (partSearchNamesElement == null || partSearchNamesElement == "") partSearchNamesElement = partName;
+                                if (partSearchNamesElement is null || partSearchNamesElement == "") partSearchNamesElement = partName;
                                 IEnumerable<string> partSearchNames = partSearchNamesElement.Split(';').Select(n => ToSearchString(n));
 
                                 LedPart part = new LedPart(() => PluginConnector.ElapsedMilliseconds)
@@ -153,14 +155,14 @@ namespace DbsPlugin.Standard.Led
                                     SearchNames = partSearchNames,
                                     X = (int)((uint?)partElement.Attribute("X") ?? 0),
                                     Y = (int)((uint?)partElement.Attribute("Y") ?? 0),
-                                    DisplayingBitmap = 0,
+                                    DisplayingBitmapIndex = 0,
                                     GetBitmapsForRichTextFunc = () => ledPartBitmaps,
                                 };
 
                                 #region Visibilityの設定
                                 int visibility = (int)((uint?)partElement.Attribute("Visibility") ?? 0b0);
                                 string visibilityConverterSourceName = (string)partElement.Attribute("VisibilityConverterSource");
-                                if (visibilityConverterSourceName == null)
+                                if (visibilityConverterSourceName is null)
                                 {
                                     part.Visibility = visibility;
                                 }
@@ -182,7 +184,7 @@ namespace DbsPlugin.Standard.Led
                                             references.AddRange(referencesBase[0].Substring("/// ReferenceAssemblies = ".Length).Split(new string[] { " | " }, StringSplitOptions.RemoveEmptyEntries));
                                         }
                                         Assembly assembly = PluginConnector.CompileAssembly(visibilityConverterSourcePath, references, PluginName, type, name);
-                                        if (assembly == null)
+                                        if (assembly is null)
                                         {
                                             ThrowControlError("VisibilityConverter \"" + visibilityConverterSourcePath + "\" のコンパイルに失敗しました。");
                                             return;
@@ -191,14 +193,14 @@ namespace DbsPlugin.Standard.Led
                                         Type[] assemblyTypes = assembly.GetExportedTypes();
                                         foreach (Type assemblyType in assemblyTypes)
                                         {
-                                            if (assemblyType.IsClass && !assemblyType.IsAbstract && assemblyType.GetInterface(iName) != null && (assemblyType.Namespace ?? "").Split('.')[0] == "DbsData")
+                                            if (assemblyType.IsClass && !assemblyType.IsAbstract && !(assemblyType.GetInterface(iName) is null) && (assemblyType.Namespace ?? "").Split('.')[0] == "DbsData")
                                             {
                                                 visibilityConverter = (IVisibilityConverter)Activator.CreateInstance(assemblyType);
                                                 visibilityConverters.Add(visibilityConverterSourcePath, visibilityConverter);
                                                 break;
                                             }
                                         }
-                                        if (visibilityConverter == null)
+                                        if (visibilityConverter is null)
                                         {
                                             ThrowControlError("VisibilityConverter \"" + visibilityConverterSourcePath + "\" で、 IVisibilityConverter を実装し DbsData.* 名前空間に存在する有効なクラスが見つかりませんでした。");
                                             return;
@@ -214,7 +216,7 @@ namespace DbsPlugin.Standard.Led
 
                                 #region DisplayPhaseの設定
                                 string displayPhaseSourceName = (string)partElement.Attribute("DisplayPhaseSource");
-                                if (displayPhaseSourceName == null)
+                                if (displayPhaseSourceName is null)
                                 {
                                     ThrowControlError("LED レイアウトファイル \"" + layoutXmlPath + "\"で、DisplayPhaseSource が指定されていないパーツがあります。");
                                     return;
@@ -222,7 +224,7 @@ namespace DbsPlugin.Standard.Led
                                 string displayPhaseSourcePath = Combine(GetDirectoryName(layoutXmlPath), displayPhaseSourceName);
                                 XDocument displayPhaseDefinitionXml = XDocument.Load(displayPhaseSourcePath);
                                 XElement displayPhaseDefinitions = displayPhaseDefinitionXml.Element("LedDisplayPhaseDefinitions");
-                                if (displayPhaseDefinitions == null)
+                                if (displayPhaseDefinitions is null)
                                 {
                                     ThrowControlError("\"" + displayPhaseSourcePath + "\" は表示フェーズファイルではありません。");
                                     return;
@@ -231,7 +233,7 @@ namespace DbsPlugin.Standard.Led
                                 part.DisplayPhases = displayPhaseDefinitions.Elements("DisplayPhaseDefinition").Select(displayPhaseDefinition =>
                                 {
                                     int? span = (int?)displayPhaseDefinition.Attribute("Span");
-                                    if (span == null)
+                                    if (span is null)
                                     {
                                         ThrowControlError("表示フェーズファイル \"" + displayPhaseSourcePath + "\"で、Span が指定されていない表示フェーズがあります。");
                                         return null;
@@ -239,7 +241,7 @@ namespace DbsPlugin.Standard.Led
 
                                     string rawVisibilityIndex = (string)displayPhaseDefinition.Attribute("VisibilityIndex");
                                     int visibilityIndex;
-                                    if (rawVisibilityIndex == null)
+                                    if (rawVisibilityIndex is null)
                                     {
                                         ThrowControlError("表示フェーズファイル \"" + displayPhaseSourcePath + "\"で、VisibilityIndex が指定されていない表示フェーズがあります。");
                                         return null;
@@ -255,7 +257,7 @@ namespace DbsPlugin.Standard.Led
                                     }
 
                                     int? faceIndex = (int?)displayPhaseDefinition.Attribute("FaceIndex");
-                                    if (faceIndex == null)
+                                    if (faceIndex is null)
                                     {
                                         ThrowControlError("表示フェーズファイル \"" + displayPhaseSourcePath + "\"で、FaceIndex が指定されていない表示フェーズがあります。");
                                         return null;
@@ -279,7 +281,7 @@ namespace DbsPlugin.Standard.Led
                                 {
                                     XDocument partDefsXml = XDocument.Load(partDefsXmlPath);
                                     XElement partDefs = partDefsXml.Element("LedPart");
-                                    if (partDefs == null)
+                                    if (partDefs is null)
                                     {
                                         ThrowControlError("\"" + partDefsXmlPath + "\" は LED パーツファイルではありません。");
                                         return;
@@ -297,7 +299,7 @@ namespace DbsPlugin.Standard.Led
                                     foreach (XElement imageElement in images)
                                     {
                                         string imageName = (string)imageElement.Attribute("Name");
-                                        if (imageName == null || imageName == "")
+                                        if (imageName is null || imageName == "")
                                         {
                                             if (imagesCount != 1)
                                             {
@@ -311,10 +313,10 @@ namespace DbsPlugin.Standard.Led
                                         }
 
                                         string imageSystemName = (string)imageElement.Attribute("System");
-                                        if (imageSystemName == null || imageSystemName == "") imageSystemName = imageName;
+                                        if (imageSystemName is null || imageSystemName == "") imageSystemName = imageName;
 
                                         string imageSearchNamesBase = (string)imageElement.Attribute("Search");
-                                        if (imageSearchNamesBase == null || imageSearchNamesBase == "") imageSearchNamesBase = imageName;
+                                        if (imageSearchNamesBase is null || imageSearchNamesBase == "") imageSearchNamesBase = imageName;
                                         IEnumerable<string> imageSearchNames = imageSearchNamesBase.Split(';').Select(n => ToSearchString(n));
 
                                         IEnumerable<XElement> definitionElements = imageElement.Elements("Definition");
@@ -322,21 +324,21 @@ namespace DbsPlugin.Standard.Led
                                         foreach (XElement definitionElement in definitionElements)
                                         {
                                             string definitionName = (string)definitionElement.Attribute("Name");
-                                            if (definitionName == null)
+                                            if (definitionName is null)
                                             {
                                                 ThrowControlError("LED パーツファイル \"" + partDefsXmlPath + "\" で、名前付けがされていないコマがあります。");
                                                 break;
                                             }
 
                                             string definitionSystemName = (string)definitionElement.Attribute("System");
-                                            if (definitionSystemName == null || definitionSystemName == "") definitionSystemName = definitionName;
+                                            if (definitionSystemName is null || definitionSystemName == "") definitionSystemName = definitionName;
 
                                             string definitionSearchNamesBase = (string)definitionElement.Attribute("Search");
-                                            if (definitionSearchNamesBase == null || definitionSearchNamesBase == "") definitionSearchNamesBase = definitionName;
+                                            if (definitionSearchNamesBase is null || definitionSearchNamesBase == "") definitionSearchNamesBase = definitionName;
                                             IEnumerable<string> definitionSearchNames = definitionSearchNamesBase.Split(';').Select(n => ToSearchString(n));
 
                                             bool flash = ToSearchString((string)definitionElement.Attribute("Flash") ?? "") == ToSearchString("True");
-                                            if (definitionElement.Attribute("Flash") != null)
+                                            if (!(definitionElement.Attribute("Flash") is null))
                                             {
 
                                             }
@@ -437,6 +439,7 @@ namespace DbsPlugin.Standard.Led
                 LedControl ledControl = new LedControl()
                 {
                     ControlName = controlInfo.ControlName,
+                    Path = layoutXmlPath,
 
                     Width = width,
                     Height = height,

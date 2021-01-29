@@ -18,7 +18,7 @@ namespace DbsPlugin.Standard.Led
             List<LedShortcut> shortcuts = new List<LedShortcut>();
 
             XElement shortcutDefinitionsElement = Element.Element("ShortcutDefinitions");
-            if (shortcutDefinitionsElement != null)
+            if (!(shortcutDefinitionsElement is null))
             {
                 IEnumerable<XElement> shortcutDefinitionElements = shortcutDefinitionsElement.Elements("ShortcutDefinition");
                 foreach (XElement shortcutDefinitionElement in shortcutDefinitionElements)
@@ -63,14 +63,14 @@ namespace DbsPlugin.Standard.Led
                         foreach (XElement setElement in setElements)
                         {
                             LedShortcutSet set = shortcutSetLoader.LoadSet(setElement);
-                            if (set != null) shortcutSets.Add(set);
+                            if (!(set is null)) shortcutSets.Add(set);
                         }
 
                         IEnumerable<XElement> setConverterElements = shortcutElement.Elements("SetConverter");
                         foreach (XElement setConverterElement in setConverterElements)
                         {
                             LedShortcutSetConverter setConverter = shortcutSetLoader.LoadSetConverter(setConverterElement);
-                            if (setConverter != null) shortcutSets.Add(setConverter);
+                            if (!(setConverter is null)) shortcutSets.Add(setConverter);
                         }
 
                         shortcuts.Add(new LedShortcut() { Name = shortcutName, SearchNames = shortcutSearchNames, Sets = shortcutSets });

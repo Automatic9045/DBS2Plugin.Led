@@ -40,10 +40,10 @@ namespace DbsPlugin.Standard.Led
                     List<LedPart> parts = connector.LedControls.Find(c => c.ControlName == connector.PluginConnector.Controller.ControlName).Parts;
                     UpdateGroupEditing(parts);
                     LedPart part = parts.Find(p => p.Name == PartCollection[PartCur]);
-                    if (part != null && part.DisplayingYIndex != -1)
+                    if (!(part is null) && part.DisplayingYIndex != -1)
                     {
                         //MessageBox.Show("" + part.DisplayingImage + ", " + part.DisplayingYIndex);
-                        DefCur = DefCollection.IndexOf(part.Bitmaps[part.DisplayingBitmap].Definitions[part.DisplayingYIndex].Name);
+                        DefCur = DefCollection.IndexOf(part.Bitmaps[part.DisplayingBitmapIndex].Definitions[part.DisplayingYIndex].Name);
                     }
                     else
                         DefCur = 0;
@@ -64,7 +64,7 @@ namespace DbsPlugin.Standard.Led
                 if (DefCur != -1 && hasDefChanged && DefCollection[0] != "(該当無し)")
                 {
                     LedPart part = connector.LedControls.Find(c => c.ControlName == connector.PluginConnector.Controller.ControlName).Parts.First(p => p.Name == PartCollection[PartCur]);
-                    part.DisplayingBitmap = Groups.FindIndex(g => g.Name == GroupCollection[GroupCur]);
+                    part.DisplayingBitmapIndex = Groups.FindIndex(g => g.Name == GroupCollection[GroupCur]);
                     part.DisplayingYIndex = Defs.FindIndex(d => d.Name == DefCollection[DefCur]);
                     UpdatePreview(part);
                 }
@@ -282,7 +282,7 @@ namespace DbsPlugin.Standard.Led
                             LedShortcutSet staticSet = (LedShortcutSet)set;
 
                             LedPart part = control.Parts[staticSet.TargetIndex];
-                            part.DisplayingBitmap = staticSet.ImageIndex;
+                            part.DisplayingBitmapIndex = staticSet.ImageIndex;
                             part.DisplayingYIndex = staticSet.FrameIndex;
                         }
                         else if (set is LedShortcutSetConverter)
@@ -476,7 +476,7 @@ namespace DbsPlugin.Standard.Led
                 List<LedPartBitmap> currentGroups = currentPart.Bitmaps;
                 Groups = currentGroups;
                 GroupTextChanged.Execute();
-                GroupCur = GroupCollection.IndexOf(currentGroups[currentPart.DisplayingBitmap].Name);
+                GroupCur = GroupCollection.IndexOf(currentGroups[currentPart.DisplayingBitmapIndex].Name);
 
                 FreeText = currentPart.FreeTextContent;
                 UseFreeText = currentPart.UseFreeText;
@@ -504,7 +504,7 @@ namespace DbsPlugin.Standard.Led
                 {
                     DefCur = 0;
                 }
-                else if (Groups.FindIndex(g => g.Name == currentGroups[currentPart.DisplayingBitmap].Name) != currentPart.DisplayingBitmap)
+                else if (Groups.FindIndex(g => g.Name == currentGroups[currentPart.DisplayingBitmapIndex].Name) != currentPart.DisplayingBitmapIndex)
                 {
                     DefCur = 0;
                 }
@@ -533,15 +533,15 @@ namespace DbsPlugin.Standard.Led
 
         private void UpdatePreview(LedPart currentPart)
         {
-            int baseWidth = currentPart.Bitmaps[currentPart.DisplayingBitmap].Width;
-            int baseHeight = currentPart.Bitmaps[currentPart.DisplayingBitmap].Height;
+            int baseWidth = currentPart.Bitmaps[currentPart.DisplayingBitmapIndex].Width;
+            int baseHeight = currentPart.Bitmaps[currentPart.DisplayingBitmapIndex].Height;
 
             int dotWidth = baseWidth;
             int dotHeight = currentPart.Height;
 
             byte[] dots = new byte[dotWidth * dotHeight * 3];
             connector.CalculatorGateway.ClearDots(dots, dotWidth, dotHeight);
-            connector.CalculatorGateway.WriteImageToDots(dots, currentPart.Bitmaps[currentPart.DisplayingBitmap].Pixels, 0, 0, baseWidth, baseHeight, dotWidth, dotHeight, dotWidth, dotHeight, 0, currentPart.DisplayingYIndex, false);
+            connector.CalculatorGateway.WriteImageToDots(dots, currentPart.Bitmaps[currentPart.DisplayingBitmapIndex].Pixels, 0, 0, baseWidth, baseHeight, dotWidth, dotHeight, dotWidth, dotHeight, 0, currentPart.DisplayingYIndex, false);
 
             UpdatePreview(dots, dotWidth, dotHeight);
         }
